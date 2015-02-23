@@ -28,11 +28,12 @@ public class MainActivity extends Activity implements SensorEventListener {
 
     private TextView mTextView;
     private GestureDetector mDetector;
-    private static final int SENSOR_TYPE_HEARTRATE = 65562;
     private Sensor mHeartRateSensor;
     private SensorManager mSensorManager;
     private CountDownLatch latch;
-    private List<Sensor> list;
+    private HeartRateColor hrc;
+    private boolean isDetecting;
+    private float heartRate = 0.0f;
 
 
     @Override
@@ -41,60 +42,72 @@ public class MainActivity extends Activity implements SensorEventListener {
         setContentView(R.layout.activity_main);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-//        GoogleApiClient mGoogleApiClient = new GoogleApiClient.Builder(this)
-//                .addApi(Fitness.API).addScope(Fitness.SCOPE_BODY_READ).build();
-
         final WatchViewStub stub = (WatchViewStub) findViewById(R.id.watch_view_stub);
-        latch = new CountDownLatch(1);
+        mSensorManager = ((SensorManager)getSystemService(SENSOR_SERVICE));
+        mHeartRateSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_HEART_RATE);
 
+        if (mHeartRateSensor == null){
+            //maybe we will just show screen no heart sesnor detected
+            //and return
+            Log.d("ERROR", "heart rate sensor is null");
+        }
+
+
+        final SensorEventListener sL = this;
         stub.setOnLayoutInflatedListener(new WatchViewStub.OnLayoutInflatedListener() {
             @Override
             public void onLayoutInflated(WatchViewStub stub) {
                 mTextView = (TextView) stub.findViewById(R.id.text);
                 RelativeLayout v = (RelativeLayout) stub.findViewById(R.id.moodView);
+                hrc = new HeartRateColor(mHeartRateSensor, v);
+
                 v.setOnTouchListener(new View.OnTouchListener() {
                     @Override
                     public boolean onTouch(View v, MotionEvent event) {
-                       findViewById(R.id.moodView).setBackgroundColor(Color.BLUE);
-                       activateMonitoring();
+
+                        if (event.getAction() == MotionEvent.ACTION_UP){
+                            try{
+                                //check if mheartratesensor is not null
+                                //if
+//                           latch = new CountDownLatch(3);
+                                 mSensorManager.registerListener(sL, mHeartRateSensor, SensorManager.SENSOR_DELAY_NORMAL);
+    //                           latch.await();
+                                 Thread.sleep(5000);
+
+                                hrc.updateViewWithHeartRate(heartRate);
+//                           heartRate = 0;
+//                           mSensorManager.unregisterListener(sL);
+                            } catch (InterruptedException e) {
+                                Log.e("ERROR", e.getMessage(), e);
+                            }
+                        }
                        return true;
                     }
                 });
-
-                latch.countDown();
-
             }
         });
 
-        mSensorManager = ((SensorManager)getSystemService(SENSOR_SERVICE));
-        mHeartRateSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_HEART_RATE);
 
-        if (mHeartRateSensor == null){
-              Log.d("ERROR", "heart rate sensor is null");
-        }
-    }
 
-    private void activateMonitoring(){
-//        mSensorManager.registerListener(this, mHeartRateSensor, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        mSensorManager.registerListener(this, this.mHeartRateSensor, SensorManager.SENSOR_DELAY_NORMAL);
+
     }
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
-        try {
-            latch.await();
+      //  try {
+        //    latch.await();
             if(sensorEvent.values[0] > 0){
-
+                heartRate = sensorEvent.values[0];
             }
 
-        } catch (InterruptedException e) {
-            Log.e("ERROR", e.getMessage(), e);
-        }
+    //    } catch (InterruptedException e) {
+      //      Log.e("ERROR", e.getMessage(), e);
+       // }
     }
 
     protected void onStop() {
