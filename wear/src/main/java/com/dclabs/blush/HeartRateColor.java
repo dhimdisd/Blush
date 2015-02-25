@@ -44,9 +44,9 @@ public class HeartRateColor {
         ObjectAnimator colorFade = ObjectAnimator.ofObject(view,
                                         "backgroundColor",
                                         new ArgbEvaluator(),
+                                        0xffffffff,
                                         getColorForHeartBeat(heartRate)
                                         );
-
         colorFade.setDuration(2000);
         colorFade.start();
 
@@ -70,9 +70,11 @@ public class HeartRateColor {
             return this.green;
         }else if (80 <= heartBeat && heartBeat < 100 ){
             return this.blush;
-        }else  {
+        }else if (heartBeat >= 100)  {
             return this.ham;
         }
+
+        return this.dead;
 
     }
 

@@ -1,7 +1,7 @@
 package com.dclabs.blush;
 
 import android.app.Activity;
-import android.graphics.Color;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.wearable.view.WatchViewStub;
 import android.hardware.Sensor;
@@ -11,17 +11,12 @@ import android.hardware.SensorManager;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.util.Log;
-import android.support.v4.view.MotionEventCompat;
 
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.fitness.Fitness;
-
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 public class MainActivity extends Activity implements SensorEventListener {
@@ -34,6 +29,9 @@ public class MainActivity extends Activity implements SensorEventListener {
     private HeartRateColor hrc;
     private boolean isDetecting;
     private float heartRate = 0.0f;
+    private ProgressBar bar;
+    final SensorEventListener sL = this;
+    private ProgressTask task = null;
 
 
     @Override
@@ -43,11 +41,12 @@ public class MainActivity extends Activity implements SensorEventListener {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         final WatchViewStub stub = (WatchViewStub) findViewById(R.id.watch_view_stub);
-        mSensorManager = ((SensorManager)getSystemService(SENSOR_SERVICE));
+        mSensorManager = ((SensorManager) getSystemService(SENSOR_SERVICE));
         mHeartRateSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_HEART_RATE);
 
-        if (mHeartRateSensor == null){
-            //maybe we will just show screen no heart sesnor detected
+
+        if (mHeartRateSensor == null) {
+            //maybe we will just show screen no heart sensor detected
             //and return
             Log.d("ERROR", "heart rate sensor is null");
         }
@@ -56,37 +55,26 @@ public class MainActivity extends Activity implements SensorEventListener {
         final SensorEventListener sL = this;
         stub.setOnLayoutInflatedListener(new WatchViewStub.OnLayoutInflatedListener() {
             @Override
-            public void onLayoutInflated(WatchViewStub stub) {
-                mTextView = (TextView) stub.findViewById(R.id.text);
+            public void onLayoutInflated(final WatchViewStub stub) {
+                mTextView = (TextView) stub.findViewById(R.id.textView);
                 RelativeLayout v = (RelativeLayout) stub.findViewById(R.id.moodView);
                 hrc = new HeartRateColor(mHeartRateSensor, v);
+                bar = (ProgressBar) stub.findViewById(R.id.progressBar);
 
                 v.setOnTouchListener(new View.OnTouchListener() {
                     @Override
                     public boolean onTouch(View v, MotionEvent event) {
-
-                        if (event.getAction() == MotionEvent.ACTION_UP){
-                            try{
-                                //check if mheartratesensor is not null
-                                //if
-//                           latch = new CountDownLatch(3);
-                                 mSensorManager.registerListener(sL, mHeartRateSensor, SensorManager.SENSOR_DELAY_NORMAL);
-    //                           latch.await();
-                                 Thread.sleep(5000);
-
-                                hrc.updateViewWithHeartRate(heartRate);
-//                           heartRate = 0;
-//                           mSensorManager.unregisterListener(sL);
-                            } catch (InterruptedException e) {
-                                Log.e("ERROR", e.getMessage(), e);
+                        if (event.getAction() == MotionEvent.ACTION_UP) {
+                            if (task == null) {
+                                task = new ProgressTask();
+                                task.execute();
                             }
                         }
-                       return true;
+                        return true;
                     }
                 });
             }
         });
-
 
 
     }
@@ -99,15 +87,11 @@ public class MainActivity extends Activity implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
-      //  try {
-        //    latch.await();
-            if(sensorEvent.values[0] > 0){
-                heartRate = sensorEvent.values[0];
-            }
 
-    //    } catch (InterruptedException e) {
-      //      Log.e("ERROR", e.getMessage(), e);
-       // }
+        if (sensorEvent.values[0] > 0) {
+            heartRate = sensorEvent.values[0];
+        }
+
     }
 
     protected void onStop() {
@@ -117,7 +101,43 @@ public class MainActivity extends Activity implements SensorEventListener {
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int i) {
-     //   Log.d(TAG, "accuracy changed: " + i);
+        Log.d("TAG", "accuracy changed: " + i);
+    }
+
+    private class ProgressTask extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected void onPreExecute() {
+
+            mTextView.setVisibility(View.INVISIBLE);
+            bar.setVisibility(View.VISIBLE);
+            mSensorManager.registerListener(
+                    sL, mHeartRateSensor,
+                    SensorManager.SENSOR_DELAY_NORMAL);
+        }
+
+        @Override
+        protected Void doInBackground(Void... arg0) {
+            long startTime = System.currentTimeMillis(); //fetch starting time
+            while (heartRate == 0 && (System.currentTimeMillis() - startTime) < 15000) {
+
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            bar.setVisibility(View.GONE);
+            if (heartRate != 0) {
+                hrc.updateViewWithHeartRate(heartRate);
+                heartRate = 0;
+            } else {
+                mTextView.setText("Try Again");
+                mTextView.setVisibility(View.VISIBLE);
+            }
+            mSensorManager.unregisterListener(sL);
+            task = null;
+        }
     }
 
 }
