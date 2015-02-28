@@ -17,6 +17,7 @@ public class HeartRateColor {
     private Sensor heartRateSensor;
     private View view;
     private Handler handler;
+    private int prevColor = 0;
 
     ////
     //  0xffE91A1A stress 110 - 150
@@ -32,7 +33,6 @@ public class HeartRateColor {
     private  static  int ham =   0xffE91E63;
 
 
-
     public HeartRateColor(Sensor heartRateSensor, View view){
         this.heartRateSensor = heartRateSensor;
         this.view = view;
@@ -40,22 +40,19 @@ public class HeartRateColor {
 
     //updates view based of color
     public void updateViewWithHeartRate(float heartRate){
+        int color = getColorForHeartBeat(heartRate);
+        if(prevColor != color){
+            ObjectAnimator colorFade = ObjectAnimator.ofObject(view,
+                    "backgroundColor",
+                    new ArgbEvaluator(),
+                    0xffffffff,
+                    color
+            );
 
-        ObjectAnimator colorFade = ObjectAnimator.ofObject(view,
-                                        "backgroundColor",
-                                        new ArgbEvaluator(),
-                                        0xffffffff,
-                                        getColorForHeartBeat(heartRate)
-                                        );
-        colorFade.setDuration(2000);
-        colorFade.start();
-
-        //once done vibrate watch
-
-    }
-
-    private int didHeartRangeChange(float heartRate){
-       return 0;
+            colorFade.setDuration(2000);
+            colorFade.start();
+            prevColor = color;
+        }
     }
 
 
