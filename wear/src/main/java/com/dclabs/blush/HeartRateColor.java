@@ -16,6 +16,7 @@ public class HeartRateColor {
 
     private Sensor heartRateSensor;
     private View view;
+    private View heartRateFragment;
     private Handler handler;
     private int prevColor = 0;
 

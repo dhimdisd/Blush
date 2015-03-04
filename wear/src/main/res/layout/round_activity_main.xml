@@ -1,39 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity"
-    tools:deviceIds="wear_round"
-    android:id="@+id/moodView"
     android:background="@color/grey"
     android:clickable="true"
-    android:keepScreenOn="true">
+    android:keepScreenOn="true"
+    tools:context=".MainActivity"
+    tools:deviceIds="wear_round">
 
-    <requestFocus
-        android:layout_below="@+id/textView"
-        android:layout_alignEnd="@+id/textView" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="Blush"
-        android:id="@+id/textView"
-        android:layout_centerVertical="true"
-        android:layout_centerHorizontal="true" />
-    <ProgressBar
-        android:id="@+id/progressBar"
-        style="?android:attr/progressBarStyleLarge"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true"
-        android:visibility="gone"
-        android:indeterminate="true"
-        android:progress="35"
-        android:indeterminateDrawable="@drawable/circular_progress_bar">
-
-    </ProgressBar>
+    <android.support.wearable.view.GridViewPager
+        android:id="@+id/pager"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:keepScreenOn="true" />
 
 </RelativeLayout>
